@@ -31,7 +31,6 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=["numpy", "scipy"],
-    extras_require=EXTRA_REQUIRES,
     packages=setuptools.find_packages("src"),
     package_dir={"": "src"},
     classifiers=[

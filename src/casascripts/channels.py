@@ -5,26 +5,27 @@ from .constants import cc
 
 def vel_to_chan(msfile, field, obsid, spw, restfreq, vel):
     """
-    Identifies the channel(s) corresponding to input LSRK velocities. 
-    Useful for choosing which channels to split out or flag if a line is 
-    expected to be present
+    Identifies the channel(s) corresponding to input LSRK velocities.
+    Useful for choosing which channels to split out or flag if a line is
+    expected to be present.
 
     Args:
-        msfile (string): name of measurement set 
+        msfile (string): name of measurement set
         field (string): field name
-        spw (int): Spectral window number 
-        obsid (int): Observation ID corresponding to the selected 
-            spectral window 
+        spw (int): Spectral window number
+        obsid (int): Observation ID corresponding to the selected
+            spectral window
         restfreq (float): Rest frequency [Hz]
-        vel (float or array of floats): input velocity in LSRK frame 
+        vel (float or array of floats): input velocity in LSRK frame
             km/s]
-            
+
 
     Returns:
-        (array) or (int) channel number most closely corresponding to 
-            input LSRK velocity 
+        (array) or (int) channel number most closely corresponding to
+            input LSRK velocity
     """
 
+    # open the file
     table.open(msfile + "/SPECTRAL_WINDOW")
     chanfreqs = table.getcol("CHAN_FREQ", startrow=spw, nrow=1)
     table.close()
@@ -57,20 +58,21 @@ def vel_to_chan(msfile, field, obsid, spw, restfreq, vel):
         return np.argmin(np.abs(chanvelocities - vel))
 
 
-def get_flagchannels(ms_dict, output_prefix, velocity_range=np.array([-20, 20])):
+def get_flagchannels(
+    msfile, field, obsid, spw, restfreq, vel, velocity_range=np.array([-20, 20])
+):
     """
-    Identify channels to flag based on provided velocity range of the 
+    Identify channels to flag based on provided velocity range of the
         line emission
 
     Args:
         ms_dict (dictionary): Dictionary of information about measurement set
-        output_prefix (string): Prefix for all output file names 
-        velocity_range np.array([min_velocity, max_velocity]): Velocity range 
+        velocity_range np.array([min_velocity, max_velocity]): Velocity range
             (in km/s) over which line emission has been identified
 
     Returns:
-        String of channels to be flagged, in a format that can be passed to 
-            the spw parameter in CASA's flagdata task. 
+        String of channels to be flagged, in a format that can be passed to
+            the spw parameter in CASA's flagdata task.
     """
     flagchannels_string = ""
     for j, spw in enumerate(ms_dict["line_spws"]):
@@ -100,4 +102,3 @@ def get_flagchannels(ms_dict, output_prefix, velocity_range=np.array([-20, 20]))
     )
 
     return flagchannels_string
-
