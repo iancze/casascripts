@@ -1,13 +1,16 @@
+import casatasks
+
+
 def fit_gaussian(imagename, region, dooff=False):
     """
-    Wrapper for imfit in CASA to fit a single Gaussian component to a selected 
+    Wrapper for imfit in CASA to fit a single Gaussian component to a selected
     region of the image.
 
     Args:
-        imagename (string): Name of CASA image (ending in .image) 
-        region (string): CASA region format, e.g., 
-            'circle[[200pix, 200pix], 3arcsec]' 
-        dooff (bool): allow for fitting a zero-level offset 
+        imagename (string): Name of CASA image (ending in .image)
+        region (string): CASA region format, e.g.,
+            'circle[[200pix, 200pix], 3arcsec]'
+        dooff (bool): allow for fitting a zero-level offset
     """
     imfitdict = imfit(imagename=imagename, region=region, dooff=dooff)
     print(imfitdict)
@@ -79,17 +82,17 @@ def plot_deprojected(
         filelist (list): names of .npz files storing visibility data
         incl (float): Inclination of disk [degrees]
         PA (float): Position angle of disk [degrees]
-        offx (float): Horizontal offset of disk center from phase center 
+        offx (float): Horizontal offset of disk center from phase center
             [arcseconds]
-        offy (float): Vertical offset of disk center from phase center 
+        offy (float): Vertical offset of disk center from phase center
             [arcseconds]
-        fluxscale (list): scaling factors to multiply the visibility values 
-            by before plotting. Default value is set to all ones. 
+        fluxscale (list): scaling factors to multiply the visibility values
+            by before plotting. Default value is set to all ones.
         uvbins: Array of bins at which to plot the visibility values, in lambda.
             By default, the range plotted will be from 10 to 1000 kilolambda
-        show_err (bool): plot error bars. 
+        show_err (bool): plot error bars.
 
-    More information about the deprojection is in A. M. Hughes et al. 2007 and 
+    More information about the deprojection is in A. M. Hughes et al. 2007 and
     Lay et al. 1997, Fig 3e.
     """
     if fluxscale is None:
@@ -156,29 +159,29 @@ def estimate_flux_scale(
     reference, comparison, incl=0, PA=0, uvbins=None, offx=0, offy=0
 ):
     """
-    Calculates the weighted average of the flux ratio between two observations 
-    of a source. The minimum baseline compared is the longer of the minimum 
-    baselines in the individual datasets. The longest baseline compared is 
-    either the shorter of the longest baselines in the individual datasets, 
+    Calculates the weighted average of the flux ratio between two observations
+    of a source. The minimum baseline compared is the longer of the minimum
+    baselines in the individual datasets. The longest baseline compared is
+    either the shorter of the longest baselines in the individual datasets,
     or 800 kilolambda.
-    
+
     Args:
-        reference (str): name of .npz file holding the reference dataset 
+        reference (str): name of .npz file holding the reference dataset
             (with the "correct" flux")
-        comparison (str): name of .npz file holding the comparison dataset 
+        comparison (str): name of .npz file holding the comparison dataset
             (with the flux ratio being checked)
         filelist (list): names of .npz files storing visibility data
         incl (float): Inclination of disk [degrees]
         PA (float): Position angle of disk [degrees]
-        offx (float): Horizontal offset of disk center from phase center 
+        offx (float): Horizontal offset of disk center from phase center
             [arcseconds]
-        offy (float): Vertical offset of disk center from phase center 
+        offy (float): Vertical offset of disk center from phase center
             [arcseconds]
         uvbins (array): bins at which to compare the visibility values [lambda]
-            By default, the minimum baseline compared is the longer of the 
-            minimum baselines in the individual datasets. The longest 
+            By default, the minimum baseline compared is the longer of the
+            minimum baselines in the individual datasets. The longest
             baseline compared is either the shorter of the longest baselines
-            in the individual datasets, or 800 kilolambda, whichever 
+            in the individual datasets, or 800 kilolambda, whichever
             comes first.
     """
 
@@ -285,12 +288,12 @@ def estimate_SNR(imagename, disk_mask, noise_mask, chans=None):
     Estimate peak SNR of source
 
     Args:
-        imagename (string): Image name ending in '.image' 
+        imagename (string): Image name ending in '.image'
         disk_mask: in the CASA region format
-        noise_mask (string): Annulus to measure image rms, in the CASA region 
-            format, e.g. 'annulus[[500pix, 500pix],["1arcsec", "2arcsec"]]' 
+        noise_mask (string): Annulus to measure image rms, in the CASA region
+            format, e.g. 'annulus[[500pix, 500pix],["1arcsec", "2arcsec"]]'
     """
-    headerlist = imhead(imagename, mode="list")
+    headerlist = casatasks.imhead(imagename, mode="list")
     beammajor = headerlist["beammajor"]["value"]
     beamminor = headerlist["beamminor"]["value"]
     beampa = headerlist["beampa"]["value"]
@@ -299,9 +302,11 @@ def estimate_SNR(imagename, disk_mask, noise_mask, chans=None):
         "# Beam %.3f arcsec x %.3f arcsec (%.2f deg)" % (beammajor, beamminor, beampa)
     )
     if chans is not None:
-        disk_stats = imstat(imagename=imagename, region=disk_mask, chans=chans)
+        disk_stats = casatasks.imstat(
+            imagename=imagename, region=disk_mask, chans=chans
+        )
     else:
-        disk_stats = imstat(imagename=imagename, region=disk_mask)
+        disk_stats = casatasks.imstat(imagename=imagename, region=disk_mask)
     disk_flux = disk_stats["flux"][0]
     print("# Flux inside disk mask: %.3f mJy" % (disk_flux * 1000,))
     peak_intensity = disk_stats["max"][0]
@@ -311,9 +316,11 @@ def estimate_SNR(imagename, disk_mask, noise_mask, chans=None):
     # print("mean", disk_stats["mean"])
     # print("sigma", disk_stats["sigma"])
     if chans is not None:
-        rms = imstat(imagename=imagename, region=noise_mask, chans=chans)["rms"][0]
+        rms = casatasks.imstat(imagename=imagename, region=noise_mask, chans=chans)[
+            "rms"
+        ][0]
     else:
-        rms = imstat(imagename=imagename, region=noise_mask)["rms"][0]
+        rms = casatasks.imstat(imagename=imagename, region=noise_mask)["rms"][0]
     print("# rms: %.3e mJy/beam" % (rms * 1000,))
     SNR = peak_intensity / rms
     print("# Peak SNR: %.3f" % (SNR,))
@@ -322,11 +329,11 @@ def estimate_SNR(imagename, disk_mask, noise_mask, chans=None):
 
 def get_station_numbers(msfile, antenna_name):
     """
-    Get the station numbers for all observations in which the given 
+    Get the station numbers for all observations in which the given
     antenna appears.
 
     Args:
-        msfile (string): name of measurement set 
+        msfile (string): name of measurement set
         antenna_name (string): name of antenna (e.g. "DA48")
     """
     tb.open(msfile + "/ANTENNA")
@@ -345,4 +352,3 @@ def get_station_numbers(msfile, antenna_name):
         matching_obs = np.unique(obsid[np.where(antenna1 == i)])
         for j in matching_obs:
             print("#Observation ID %d: %s@%s" % (j, antenna_name, ant_stations[i]))
-
